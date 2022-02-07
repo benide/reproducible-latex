@@ -1,0 +1,55 @@
+This uses a modification of the flake from [[https://flyx.org/nix-flakes-latex/][this blog post]] as a template. It's been modified to include synctex.
+** Using the template
+
+To set up your flake, run:
+
+#+begin_src shell
+nix flake init -t github:benide/reproducible-latex
+#+end_src
+
+In the generated =flake.nix=, change the variable =documentName= to the name of your tex file /without/ the =.tex=.
+
+The document can be built with a call to =nix build=. The resulting pdf and synctex.gz files appear in the linked =result= folder.
+
+** Package and NixOS Module
+
+This flake outputs a default package that is just texlive, but using the same lockfile that's in the template. This way you can install the same version of texlive on your system that your reproducible documents use. This way the nix store only needs one copy of texlive, which makes using =texlive.combined.scheme-full= not use up too much space. This can be installed in a non-NixOS profile via:
+
+#+begin_src shell
+nix profile install github:benide/reproducible-latex
+#+end_src
+
+There is also a NixOS module. Here is an example flake for a NixOS config that uses this module:
+
+#+begin_src nix
+{
+  inputs = {
+    nixpkgs.url = nixpkgs/nixos-unstable;
+    reproducible-latex.url = github:benide/reproducible-latex;
+  };
+
+  outputs = { self, nixpkgs, reproducible-latex, ... }: {
+    nixosConfigurations = {
+      hostname = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        modules = [
+          ./configuration.nix
+          reproducible-latex.nixosModule
+        ];
+      };
+    };
+  };
+}
+#+end_src
+
+** Synctex details
+
+Synctex doesn't like to use relative paths. The perl in the =installPhase= of the template changes everything to relative paths. To make this work, your editing environment needs to know that the output directory is =result/=.
+
+If you use Emacs, there is a =.dir-locals.el= file included that sets the correct output directory for AucTeX and sets the default build command to =Nix build=. The default command only makes sense if your emacs config actually has that. Here's what I have:
+
+#+begin_src elisp
+(add-to-list 'TeX-command-list
+             '("Nix build" "nix build" TeX-run-compile nil (latex-mode)
+               :help "Use nix to build"))
+#+end_src
