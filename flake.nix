@@ -2,14 +2,16 @@
   description = "LaTeX template for reproducible documents";
 
   inputs = {
-    nixpkgs.url = github:NixOS/nixpkgs/nixos-unstable;
+    # nixpkgs.url = github:NixOS/nixpkgs/nixos-unstable;
+    nixpkgs.url = github:NixOS/nixpkgs/nixos-21.11;
     flake-utils.url = github:numtide/flake-utils;
   };
 
   outputs = { self, nixpkgs, flake-utils }:
 
-    # Package for installing the same version of texlive in non-NixOS systems:
-    # e.g., using: nix profile install github:benide/reproducible-latex
+    # Package for imperitive installation of the same version of
+    # texlive in non-NixOS systems. Use the following command:
+    #   nix profile install github:benide/reproducible-latex
     with flake-utils.lib; eachSystem defaultSystems (system:
     let
       pkgs = nixpkgs.legacyPackages.${system};
@@ -26,11 +28,9 @@
       defaultPackage = tex;
     }) // {
 
-    # Module for installing the same version of texlive in NixOS config flakes
-    nixosModule = { config, pkgs, ... }: {
-      config.environment.systemPackages = [
-        nixpkgs.legacyPackages."x86_64-linux".texlive.combined.scheme-full
-      ];
+    # Overlay for fixed version of texlive
+    overlay = final: prev: rec {
+      texlive = nixpkgs.legacyPackages.${prev.system}.texlive;
     };
 
     # The template
