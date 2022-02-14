@@ -2,8 +2,7 @@
   description = "LaTeX template for reproducible documents";
 
   inputs = {
-    # nixpkgs.url = github:NixOS/nixpkgs/nixos-unstable;
-    nixpkgs.url = github:NixOS/nixpkgs/nixos-21.11;
+    nixpkgs.url = github:NixOS/nixpkgs/nixos-unstable;
     flake-utils.url = github:numtide/flake-utils;
   };
 
